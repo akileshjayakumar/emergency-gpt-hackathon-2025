@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
         { role: "system", content: systemPrompt },
         ...parsed.data.messages,
       ],
-      tools: [],
       providerOptions: {
         groq: {
           structuredOutputs: false,

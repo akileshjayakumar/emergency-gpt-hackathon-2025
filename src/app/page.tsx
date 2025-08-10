@@ -28,16 +28,35 @@ async function compressImageToJpeg(
             width: targetW,
             height: targetH,
           });
-    const ctx = (canvas as any).getContext("2d");
-    if (!ctx) return file;
+    const rawCtx = (canvas as HTMLCanvasElement | OffscreenCanvas).getContext(
+      "2d"
+    );
+    const isCanvas2DContext = (
+      ctx: unknown
+    ): ctx is CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D => {
+      return (
+        !!ctx &&
+        typeof (ctx as CanvasRenderingContext2D).fillRect === "function" &&
+        "fillStyle" in (ctx as Record<string, unknown>)
+      );
+    };
+    if (!isCanvas2DContext(rawCtx)) return file;
+    const ctx = rawCtx;
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, targetW, targetH);
     ctx.drawImage(bitmap, 0, 0, targetW, targetH);
-    const blob: Blob = (await (canvas as any).convertToBlob)
-      ? await (canvas as any).convertToBlob({ type: "image/jpeg", quality })
+    const isOffscreen = (
+      c: HTMLCanvasElement | OffscreenCanvas
+    ): c is OffscreenCanvas =>
+      typeof (c as OffscreenCanvas).convertToBlob === "function";
+    const blob: Blob = isOffscreen(canvas)
+      ? await (canvas as OffscreenCanvas).convertToBlob({
+          type: "image/jpeg",
+          quality,
+        })
       : await new Promise((resolve) =>
           (canvas as HTMLCanvasElement).toBlob(
-            (b) => resolve(b as Blob),
+            (b) => resolve((b as Blob) || new Blob()),
             "image/jpeg",
             quality
           )
