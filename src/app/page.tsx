@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import type React from "react";
 
 // Compress images on the client to speed up uploads and inference
 async function compressImageToJpeg(
@@ -292,12 +293,15 @@ export default function Home() {
       const decoder = new TextDecoder();
       let assistantText = "";
       setIsChatting(true);
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setChatMessages((prev: typeof chatMessages) => [
+        ...prev,
+        { role: "assistant", content: "" },
+      ]);
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         assistantText += decoder.decode(value, { stream: true });
-        setChatMessages((prev) => {
+        setChatMessages((prev: typeof chatMessages) => {
           const updated = [...prev];
           updated[updated.length - 1] = {
             role: "assistant",
@@ -392,17 +396,19 @@ export default function Home() {
                 Extracted items
               </h2>
               <ul className="mt-2 divide-y divide-gray-100">
-                {items.map((it, idx) => (
-                  <li
-                    key={idx}
-                    className="py-2 flex items-center justify-between"
-                  >
-                    <span className="text-gray-800">{it.name}</span>
-                    <span className="text-gray-600">
-                      $ {it.price.toFixed(2)}
-                    </span>
-                  </li>
-                ))}
+                {items.map(
+                  (it: ExtractResponse["items"][number], idx: number) => (
+                    <li
+                      key={idx}
+                      className="py-2 flex items-center justify-between"
+                    >
+                      <span className="text-gray-800">{it.name}</span>
+                      <span className="text-gray-600">
+                        $ {it.price.toFixed(2)}
+                      </span>
+                    </li>
+                  )
+                )}
               </ul>
               {/* Analyse button removed; analysis runs automatically after extraction */}
             </div>
@@ -416,17 +422,19 @@ export default function Home() {
                     Cheapest Option
                   </h3>
                   <ul className="mt-1 space-y-1">
-                    {analysis.cheapest.map((c, i) => (
-                      <li key={i}>
-                        <p className="text-gray-900 font-medium text-lg">
-                          {c.name}
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          $ {c.price.toFixed(2)} • {c.calories[0]}–
-                          {c.calories[1]} kcal
-                        </p>
-                      </li>
-                    ))}
+                    {analysis.cheapest.map(
+                      (c: AnalyseResponse["cheapest"][number], i: number) => (
+                        <li key={i}>
+                          <p className="text-gray-900 font-medium text-lg">
+                            {c.name}
+                          </p>
+                          <p className="text-gray-600 text-sm">
+                            $ {c.price.toFixed(2)} • {c.calories[0]}–
+                            {c.calories[1]} kcal
+                          </p>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               )}
@@ -436,17 +444,22 @@ export default function Home() {
                     Most Expensive Option
                   </h3>
                   <ul className="mt-1 space-y-1">
-                    {analysis.most_expensive.map((m, i) => (
-                      <li key={i}>
-                        <p className="text-gray-900 font-medium text-lg">
-                          {m.name}
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          $ {m.price.toFixed(2)} • {m.calories[0]}–
-                          {m.calories[1]} kcal
-                        </p>
-                      </li>
-                    ))}
+                    {analysis.most_expensive.map(
+                      (
+                        m: AnalyseResponse["most_expensive"][number],
+                        i: number
+                      ) => (
+                        <li key={i}>
+                          <p className="text-gray-900 font-medium text-lg">
+                            {m.name}
+                          </p>
+                          <p className="text-gray-600 text-sm">
+                            $ {m.price.toFixed(2)} • {m.calories[0]}–
+                            {m.calories[1]} kcal
+                          </p>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               )}
@@ -486,16 +499,18 @@ export default function Home() {
                     Suggested questions
                   </h3>
                   <div className="mt-2 grid gap-2">
-                    {analysis.follow_up_questions.map((q, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => askChat(q)}
-                        className="text-left w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 hover:bg-[var(--muted)]"
-                      >
-                        {q}
-                      </button>
-                    ))}
+                    {analysis.follow_up_questions.map(
+                      (q: string, i: number) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => askChat(q)}
+                          className="text-left w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 hover:bg-[var(--muted)]"
+                        >
+                          {q}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -506,38 +521,45 @@ export default function Home() {
                     Chat
                   </h3>
                   <div className="mt-2 max-h-80 overflow-y-auto space-y-2">
-                    {chatMessages.map((m, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex ${
-                          m.role === "user" ? "justify-end" : "justify-start"
-                        }`}
-                      >
+                    {chatMessages.map(
+                      (
+                        m: { role: "user" | "assistant"; content: string },
+                        idx: number
+                      ) => (
                         <div
-                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm ${
-                            m.role === "user"
-                              ? "bg-emerald-600 text-white"
-                              : "bg-gray-100 text-gray-900"
+                          key={idx}
+                          className={`flex ${
+                            m.role === "user" ? "justify-end" : "justify-start"
                           }`}
                         >
-                          {m.role === "assistant" ? (
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => (
-                                  <p className="markdown">{children}</p>
-                                ),
-                              }}
-                              remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[rehypeSanitize]}
-                            >
-                              {m.content}
-                            </ReactMarkdown>
-                          ) : (
-                            m.content
-                          )}
+                          <div
+                            className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm ${
+                              m.role === "user"
+                                ? "bg-emerald-600 text-white"
+                                : "bg-gray-100 text-gray-900"
+                            }`}
+                          >
+                            {m.role === "assistant" ? (
+                              <ReactMarkdown
+                                components={{
+                                  p: ({
+                                    children,
+                                  }: {
+                                    children?: React.ReactNode;
+                                  }) => <p className="markdown">{children}</p>,
+                                }}
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeSanitize]}
+                              >
+                                {m.content}
+                              </ReactMarkdown>
+                            ) : (
+                              m.content
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                     {isChatting && (
                       <div className="flex justify-start">
                         <div className="rounded-2xl bg-gray-100 text-gray-900 px-3 py-2 text-sm shadow-sm">
@@ -558,8 +580,10 @@ export default function Home() {
                   <div className="mt-3 flex gap-2">
                     <input
                       value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setChatInput(e.target.value)
+                      }
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
                           handleSendChat();

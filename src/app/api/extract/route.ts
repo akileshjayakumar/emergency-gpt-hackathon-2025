@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// Ensure Node globals like Buffer are available for typing
 import { groq } from "@ai-sdk/groq";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -21,7 +22,7 @@ const RawItemsSchema = z.object({
   items: z
     .array(
       z.object({
-        name: z.string().transform((s) => s.trim()),
+        name: z.string().transform((s: string) => s.trim()),
         price: z.union([z.number().min(0).finite(), z.null()]),
       })
     )
@@ -29,8 +30,22 @@ const RawItemsSchema = z.object({
 });
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = Buffer.from(buffer);
-  return bytes.toString("base64");
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  // btoa is available in Edge runtime; fallback to Buffer if present
+  if (typeof btoa === "function") {
+    return btoa(binary);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const NodeBuffer = (globalThis as any).Buffer;
+  if (NodeBuffer) {
+    return NodeBuffer.from(buffer).toString("base64");
+  }
+  throw new Error("Base64 encoding not supported in this environment");
 }
 
 export async function POST(req: NextRequest) {
@@ -102,13 +117,16 @@ export async function POST(req: NextRequest) {
     });
 
     const cleaned = (result.object.items || [])
-      .map((it) => ({ name: it.name.trim(), price: it.price as number | null }))
+      .map((it: { name: string; price: number | null }) => ({
+        name: it.name.trim(),
+        price: it.price as number | null,
+      }))
       .filter(
-        (it) =>
+        (it: { name: string; price: number | null }) =>
           it.name.length > 0 &&
           typeof it.price === "number" &&
           Number.isFinite(it.price) &&
-          it.price >= 0
+          (it.price as number) >= 0
       );
 
     return NextResponse.json({ items: cleaned });
