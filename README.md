@@ -1,6 +1,6 @@
 ## Hawker Food Menu Helper
 
-Built at EMERGENCY GPT HACKATHON 2025 (Singapore). Event: [Luma page](https://lu.ma/dn2iqbwu?tk=kM5Qjp).
+Built at [EMERGENCY GPT HACKATHON 2025 (Singapore)](https://lu.ma/dn2iqbwu?tk=kM5Qjp).
 
 ### What it does
 
@@ -69,7 +69,7 @@ Open http://localhost:3000.
 
 ### Acknowledgements
 
-- Built at the EMERGENCY GPT HACKATHON 2025
+- Built at [EMERGENCY GPT HACKATHON 2025 (Singapore)](https://lu.ma/dn2iqbwu?tk=kM5Qjp)
 - Thanks to OpenAI, Groq, and organizers
 
 ### License
